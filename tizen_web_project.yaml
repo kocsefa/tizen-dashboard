@@ -1,0 +1,160 @@
+# Project type [web_app, test_runner]
+project_type: web_app
+
+# Default profile, Tizen API version
+profile: tv-samsung
+api_version: "3.0"
+
+# Build type [Debug/ Release/ Test]
+build_type: Debug
+
+# Output name for application
+output_name: TizenDashboard
+
+# Output path for build
+output_path: ""
+
+# Enable size optimization of wgt for web workspace
+opt: false
+
+# Signing profile to be used for Tizen package signing
+# If value is empty: "", active signing profile will be used
+# Else If value is ".", default signing profile will be used
+signing_profile: ""
+
+# list of certs in web project (.trust-anchor)
+trust_anchor: []
+
+# list of files in web project (.html,.css etc) and resources
+files:
+  - .git/COMMIT_EDITMSG
+  - .git/HEAD
+  - .git/config
+  - .git/description
+  - .git/hooks/applypatch-msg.sample
+  - .git/hooks/commit-msg.sample
+  - .git/hooks/fsmonitor-watchman.sample
+  - .git/hooks/post-update.sample
+  - .git/hooks/pre-applypatch.sample
+  - .git/hooks/pre-commit.sample
+  - .git/hooks/pre-merge-commit.sample
+  - .git/hooks/pre-push.sample
+  - .git/hooks/pre-rebase.sample
+  - .git/hooks/pre-receive.sample
+  - .git/hooks/prepare-commit-msg.sample
+  - .git/hooks/push-to-checkout.sample
+  - .git/hooks/sendemail-validate.sample
+  - .git/hooks/update.sample
+  - .git/index
+  - .git/info/exclude
+  - .git/logs/HEAD
+  - .git/logs/refs/heads/main
+  - .git/logs/refs/remotes/origin/main
+  - .git/objects/02/b4a35425e464432086288dbfa78003e3bd93be
+  - .git/objects/0b/8eae8263d9c896bbe906de8bde6af9cf8ea217
+  - .git/objects/31/ba2db4a1d782415a52a13d84820f7a575ff003
+  - .git/objects/36/edee85071b88fb4677ec63f7cc3294f035cdb5
+  - .git/objects/37/dc6f5560cb796b2e3cad4afe4e0a582ee385ca
+  - .git/objects/3d/07263b40c52fecec1d6e187af9aba3c99d0f58
+  - .git/objects/40/a1f7d87f9c90eb1524305124050b25f1bb5399
+  - .git/objects/44/5395534ae114c588c40ae32a18408fccc5db44
+  - .git/objects/49/4c597c67c43a610e977be18f950e022b12fb9f
+  - .git/objects/4b/825dc642cb6eb9a060e54bf8d69288fbee4904
+  - .git/objects/59/e737736760ceb0f2f3ec9d1088c2f17ca1ab0e
+  - .git/objects/5a/59ef387421f503fc1dce7701325f6e3e11341e
+  - .git/objects/5d/a02f84af2085ab1fed971aef51d1cefc876341
+  - .git/objects/61/07c76bcd7c13b48ae904f691f68f4ba970ac64
+  - .git/objects/6a/f9a07cf44c5ff22912b88f0b6f1a0f1723da8b
+  - .git/objects/6e/5e423efb04a93bd5949148ee6c7482b1d47a62
+  - .git/objects/9e/b1130b6177f25589d1f49469a899a0b4950e2c
+  - .git/objects/aa/8940fb86897c996625913fec6626cd08568871
+  - .git/objects/b7/ccca67885e823fcc1ef639d2c4d160560fb90a
+  - .git/objects/c9/d35dabd518b116ddc14f27df10627d6205c449
+  - .git/objects/ca/31ff416df0b0d1e2ce993d60a0cd3176db6c02
+  - .git/objects/d2/bd74774202c41770637fbe886d1538b036d4d2
+  - .git/objects/d5/c80facee8c5131a6f9ff77e245e8c43471acdd
+  - .git/objects/ee/45040c5050c223e2e698eabb44e9a00dec245b
+  - .git/refs/heads/main
+  - .git/refs/remotes/origin/main
+  - .gitignore
+  - .metadata/.lock
+  - .metadata/.log
+  - .metadata/.plugins/org.eclipse.cdt.core/.log
+  - .metadata/.plugins/org.eclipse.cdt.make.core/specs.c
+  - .metadata/.plugins/org.eclipse.cdt.make.core/specs.cpp
+  - .metadata/.plugins/org.eclipse.core.resources/.root/.indexes/history.version
+  - .metadata/.plugins/org.eclipse.core.resources/.root/.indexes/properties.index
+  - .metadata/.plugins/org.eclipse.core.resources/.root/.indexes/properties.version
+  - .metadata/.plugins/org.eclipse.core.resources/.root/1.tree
+  - .metadata/.plugins/org.eclipse.core.resources/.safetable/org.eclipse.core.resources
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.cdt.ui.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.core.resources.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.debug.ui.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.team.ui.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.ui.ide.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.ui.workbench.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.wst.jsdt.ui.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.tizen.common.connection.prefs
+  - .metadata/.plugins/org.eclipse.core.runtime/.settings/org.tizen.common.prefs
+  - .metadata/.plugins/org.eclipse.e4.workbench/workbench.xmi
+  - .metadata/.plugins/org.eclipse.search/dialog_settings.xml
+  - .metadata/.plugins/org.eclipse.ui.ide/dialog_settings.xml
+  - .metadata/.plugins/org.eclipse.ui.workbench/dialog_settings.xml
+  - .metadata/.plugins/org.eclipse.ui.workbench/workingsets.xml
+  - .metadata/.plugins/org.eclipse.wst.jsdt.core/variablesAndContainers.dat
+  - .metadata/.plugins/org.eclipse.wst.jsdt.ui/OpenTypeHistory.xml
+  - .metadata/.plugins/org.eclipse.wst.jsdt.ui/QualifiedTypeNameHistory.xml
+  - .metadata/.plugins/org.tizen.common.sign/migrated
+  - .metadata/version.ini
+  - README.md
+  - build-wgt.bat
+  - build-wgt.ps1
+  - css/style.css
+  - data/artworks.js
+  - data/cities.js
+  - data/quotes.js
+  - generate-icon.ps1
+  - hosted-wgt/config.xml
+  - hosted-wgt/icon.png
+  - hosted-wgt/index.html
+  - icon.png
+  - icon.svg
+  - index.html
+  - js/ambient.js
+  - js/api.js
+  - js/app.js
+  - js/dashboard.js
+  - js/remote.js
+  - js/state.js
+  - package.json
+  - tizen-dashboard-hosted.wgt
+  - tizenbrew-module.json
+
+# list of files to exclude based on the matched patterns
+excludes:
+  - Build/*
+  - Debug/*
+  - Directory.Build.targets
+  - Release/*
+  - Test/*
+  - \.Build/.*
+  - \.buildResult/.*
+  - \.csproj
+  - \.externalToolBuilders/.*
+  - \.gn
+  - \.obj/.*
+  - \.package/.*
+  - \.project
+  - \.rds_delta
+  - \.sdk_delta.info
+  - \.settings/.*
+  - \.sign/.*
+  - \.tizen-ui-builder-tool.xml
+  - \.tproject
+  - \.wgt
+  - tizen_web_project.yaml
+  - webUnitTest/*
+
+# project dependencies
+deps: []
+

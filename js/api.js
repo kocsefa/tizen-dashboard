@@ -1,6 +1,7 @@
 // ==========================================
 // Tizen TV Dashboard - Public API Entegrasyonu
 // Sıfır API Key, Tamamen Açık ve Ücretsiz API'ler
+// Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
 // ==========================================
 
 const API = {
@@ -38,43 +39,62 @@ const API = {
 
   // 1. Open-Meteo Hava Durumu API (Üyeliksiz, API Key Gerektirmez)
   async fetchWeather(lat, lon) {
-    const cacheKey = `weather_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+    const cacheKey = "weather_" + lat.toFixed(2) + "_" + lon.toFixed(2);
     try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto`;
+      const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto";
       
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Hava durumu API hatası: ${res.status}`);
+      if (!res.ok) throw new Error("Hava durumu API hatası: " + res.status);
       const data = await res.json();
 
       const current = data.current || {};
       const daily = data.daily || {};
       const weatherInfo = this.getWeatherInfo(current.weather_code);
 
+      // Güvenli değer atamaları (Tizen TV / Chrome 56+ uyumlu, ?? ve ?. kullanılmaz)
+      const rawTemp = current.temperature_2m !== undefined && current.temperature_2m !== null ? current.temperature_2m : 0;
+      const rawFeels = current.apparent_temperature !== undefined && current.apparent_temperature !== null ? current.apparent_temperature : rawTemp;
+      const rawHum = current.relative_humidity_2m !== undefined && current.relative_humidity_2m !== null ? current.relative_humidity_2m : 0;
+      const rawWind = current.wind_speed_10m !== undefined && current.wind_speed_10m !== null ? current.wind_speed_10m : 0;
+      const rawPrecip = current.precipitation !== undefined && current.precipitation !== null ? current.precipitation : 0;
+
+      let sunriseStr = "--:--";
+      if (daily.sunrise && daily.sunrise[0] && daily.sunrise[0].indexOf("T") !== -1) {
+        sunriseStr = daily.sunrise[0].split("T")[1].slice(0, 5);
+      }
+
+      let sunsetStr = "--:--";
+      if (daily.sunset && daily.sunset[0] && daily.sunset[0].indexOf("T") !== -1) {
+        sunsetStr = daily.sunset[0].split("T")[1].slice(0, 5);
+      }
+
       const parsed = {
-        temp: Math.round(current.temperature_2m ?? 0),
-        feelsLike: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
-        humidity: current.relative_humidity_2m ?? 0,
-        windSpeed: Math.round(current.wind_speed_10m ?? 0),
-        precipitation: current.precipitation ?? 0,
+        temp: Math.round(rawTemp),
+        feelsLike: Math.round(rawFeels),
+        humidity: rawHum,
+        windSpeed: Math.round(rawWind),
+        precipitation: rawPrecip,
         isDay: current.is_day === 1,
         code: current.weather_code,
         desc: weatherInfo.desc,
         icon: weatherInfo.icon,
         bgTheme: weatherInfo.bg,
-        todayMax: daily.temperature_2m_max ? Math.round(daily.temperature_2m_max[0]) : null,
-        todayMin: daily.temperature_2m_min ? Math.round(daily.temperature_2m_min[0]) : null,
-        sunrise: daily.sunrise ? daily.sunrise[0]?.split("T")[1]?.slice(0, 5) : "--:--",
-        sunset: daily.sunset ? daily.sunset[0]?.split("T")[1]?.slice(0, 5) : "--:--",
+        todayMax: daily.temperature_2m_max && daily.temperature_2m_max.length ? Math.round(daily.temperature_2m_max[0]) : null,
+        todayMin: daily.temperature_2m_min && daily.temperature_2m_min.length ? Math.round(daily.temperature_2m_min[0]) : null,
+        sunrise: sunriseStr,
+        sunset: sunsetStr,
         forecast: (daily.time || []).slice(1, 4).map((timeStr, idx) => {
-          const code = daily.weather_code ? daily.weather_code[idx + 1] : 0;
+          const code = daily.weather_code && daily.weather_code[idx + 1] !== undefined ? daily.weather_code[idx + 1] : 0;
           const info = this.getWeatherInfo(code);
           const date = new Date(timeStr);
           const dayName = date.toLocaleDateString("tr-TR", { weekday: "short" });
+          const maxT = daily.temperature_2m_max && daily.temperature_2m_max[idx + 1] !== undefined ? Math.round(daily.temperature_2m_max[idx + 1]) : 0;
+          const minT = daily.temperature_2m_min && daily.temperature_2m_min[idx + 1] !== undefined ? Math.round(daily.temperature_2m_min[idx + 1]) : 0;
           return {
             day: dayName,
             icon: info.icon,
-            max: Math.round(daily.temperature_2m_max[idx + 1]),
-            min: Math.round(daily.temperature_2m_min[idx + 1])
+            max: maxT,
+            min: minT
           };
         }),
         timestamp: Date.now()
@@ -117,23 +137,30 @@ const API = {
   },
 
   // 2. Aladhan Namaz Vakitleri API (Üyeliksiz, Diyanet Metodu 13)
-  async fetchPrayerTimes(city, country = "Turkey", lat = null, lon = null) {
-    const cacheKey = `prayer_${city.toLowerCase()}`;
+  async fetchPrayerTimes(city, country, lat, lon) {
+    if (!country) country = "Turkey";
+    const cacheKey = "prayer_" + (city ? city.toLowerCase() : "default");
     try {
       let url = "";
       if (lat && lon) {
-        url = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=13`;
+        url = "https://api.aladhan.com/v1/timings?latitude=" + lat + "&longitude=" + lon + "&method=13";
       } else {
-        url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=13`;
+        url = "https://api.aladhan.com/v1/timingsByCity?city=" + encodeURIComponent(city) + "&country=" + encodeURIComponent(country) + "&method=13";
       }
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Namaz API hatası: ${res.status}`);
+      if (!res.ok) throw new Error("Namaz API hatası: " + res.status);
       const json = await res.json();
-      const timings = json.data?.timings || {};
-      const hijri = json.data?.date?.hijri || {};
+      const timings = (json && json.data && json.data.timings) ? json.data.timings : {};
+      const hijri = (json && json.data && json.data.date && json.data.date.hijri) ? json.data.date.hijri : {};
 
       const cleanTime = (t) => (t ? t.split(" ")[0].slice(0, 5) : "--:--");
+
+      let hijriMonth = "";
+      if (hijri.month) {
+        hijriMonth = hijri.month.tr || hijri.month.en || "";
+      }
+      const hijriStr = hijri.day ? (hijri.day + " " + hijriMonth + " " + (hijri.year || "")) : "";
 
       const parsed = {
         Imsak: cleanTime(timings.Fajr),
@@ -142,7 +169,7 @@ const API = {
         Ikindi: cleanTime(timings.Asr),
         Aksam: cleanTime(timings.Maghrib),
         Yatsi: cleanTime(timings.Isha),
-        hijriDate: hijri.day ? `${hijri.day} ${hijri.month?.tr || hijri.month?.en || ""} ${hijri.year}` : "",
+        hijriDate: hijriStr,
         timestamp: Date.now()
       };
 

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart Dashboard Başlatıcı</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #151d33 0%, #080b12 100%);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .launcher-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+    .logo-box {
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 16px 40px rgba(2, 132, 199, 0.4);
+    }
+    .logo-box img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+    }
+    .app-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
+    }
+    .app-subtitle {
+      font-size: 1.2rem;
+      color: #38bdf8;
+      font-weight: 500;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-top: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status-text {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+    .error-box {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 16px 28px;
+      border-radius: 12px;
+      margin-top: 16px;
+      max-width: 500px;
+    }
+    .error-msg {
+      color: #fca5a5;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    .error-hint {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="launcher-card">
+    <div class="logo-box">
+      <img src="icon.png" alt="Smart Dashboard">
+    </div>
+    <div class="app-title">SMART DASHBOARD</div>
+    <div class="app-subtitle">Günlük Bilgiler & Sanat Galerisi</div>
+    <div id="loader-spinner" class="spinner"></div>
+    <div id="status-text" class="status-text">GitHub üzerinden yükleniyor...</div>
+
+    <div id="error-box" class="error-box">
+      <div id="error-msg" class="error-msg">İnternet bağlantısı bekleniyor...</div>
+      <div class="error-hint">Yeniden denemek için kumandadan [OK] tuşuna basın.</div>
+    </div>
+  </div>
+
+  <script>
+    const HOSTED_URL = "https://kocsefa.github.io/tizen-dashboard/";
+    let retryTimer = null;
+    let attemptCount = 0;
+
+    // Tizen TV Kumanda Tuşlarını Kaydet
+    function initTizenKeys() {
+      if (typeof tizen !== "undefined" && tizen.tvinputdevice) {
+        try {
+          const keys = ["Return", "ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue"];
+          keys.forEach(k => {
+            try { tizen.tvinputdevice.registerKey(k); } catch (e) {}
+          });
+        } catch (e) {
+          console.warn("Tizen key registration:", e);
+        }
+      }
+
+      window.addEventListener("keydown", function(e) {
+        const keyCode = e.keyCode || e.which;
+        // Return / Back tuşu (10009 veya 27)
+        if (keyCode === 10009 || keyCode === 27) {
+          e.preventDefault();
+          if (typeof tizen !== "undefined" && tizen.application) {
+            tizen.application.getCurrentApplication().exit();
+          }
+        }
+        // OK / Enter tuşu (13) - Hata durumunda yeniden dene
+        if (keyCode === 13) {
+          launchHostedApp();
+        }
+      });
+    }
+
+    function updateStatus(text, isError = false, errMsg = "") {
+      const statusEl = document.getElementById("status-text");
+      const spinnerEl = document.getElementById("loader-spinner");
+      const errBox = document.getElementById("error-box");
+      const errMsgEl = document.getElementById("error-msg");
+
+      if (statusEl) statusEl.textContent = text;
+
+      if (isError) {
+        if (spinnerEl) spinnerEl.style.display = "none";
+        if (errBox) errBox.style.display = "block";
+        if (errMsgEl && errMsg) errMsgEl.textContent = errMsg;
+      } else {
+        if (spinnerEl) spinnerEl.style.display = "block";
+        if (errBox) errBox.style.display = "none";
+      }
+    }
+
+    async function launchHostedApp() {
+      clearTimeout(retryTimer);
+      attemptCount++;
+      updateStatus("GitHub Pages adresine bağlanılıyor...");
+
+      // Doğrudan yönlendirmeyi başlat
+      try {
+        // Hızlı bir HEAD/GET kontrolü ile interneti yokla (önbelleksiz)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        const res = await fetch(HOSTED_URL + "?_t=" + Date.now(), {
+          method: "HEAD",
+          mode: "no-cors",
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        // Bağlantı başarılı, uygulamayı yükle!
+        updateStatus("Uygulama açılıyor...");
+        setTimeout(() => {
+          window.location.replace(HOSTED_URL);
+        }, 150);
+      } catch (err) {
+        console.warn("Bağlantı denemesi " + attemptCount + " başarısız:", err);
+        updateStatus("Bağlantı kurulamadı", true, "İnternet bağlantısı bekleniyor (Deneme: " + attemptCount + ")");
+        
+        // 4 saniye sonra otomatik tekrar dene (TV yeni açıldığında Wi-Fi sonradan bağlanabilir)
+        retryTimer = setTimeout(launchHostedApp, 4000);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", function() {
+      initTizenKeys();
+      // 300ms sonra başlat
+      setTimeout(launchHostedApp, 300);
+    });
+  </script>
+</body>
+</html>

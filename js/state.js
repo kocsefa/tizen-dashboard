@@ -1,5 +1,6 @@
 // ==========================================
 // Tizen TV Dashboard - Uygulama Durum Yönetimi
+// Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
 // ==========================================
 
 const State = {
@@ -38,7 +39,7 @@ const State = {
     try {
       const saved = localStorage.getItem("tizen_dash_config");
       if (saved) {
-        this.config = { ...this.config, ...JSON.parse(saved) };
+        this.config = Object.assign({}, this.config, JSON.parse(saved));
       }
     } catch (e) {
       console.warn("Ayarlar yüklenemedi:", e);
@@ -49,7 +50,7 @@ const State = {
 
     // Sanat eserlerini ata
     if (window.ARTWORKS && window.ARTWORKS.length > 0) {
-      this.data.artworks = [...window.ARTWORKS];
+      this.data.artworks = window.ARTWORKS.slice(0);
     }
 
     // Rastgele ilk günün sözünü seç
@@ -97,8 +98,11 @@ const State = {
     let next = null;
     let nextDiffMin = Infinity;
 
-    for (let p of prayerOrder) {
-      const [h, m] = p.time.split(":").map(Number);
+    for (let i = 0; i < prayerOrder.length; i++) {
+      const p = prayerOrder[i];
+      const parts = p.time.split(":").map(Number);
+      const h = parts[0];
+      const m = parts[1];
       if (isNaN(h) || isNaN(m)) continue;
       const prayerMinutes = h * 60 + m;
 
@@ -112,29 +116,33 @@ const State = {
     // Eğer yatsı da geçtiyse sonraki vakit yarınki İmsak'tır
     if (!next) {
       const p = prayerOrder[0];
-      const [h, m] = p.time.split(":").map(Number);
+      const parts = p.time.split(":").map(Number);
+      const h = parts[0];
+      const m = parts[1];
       const tomorrowImsakMin = (24 * 60) - currentMinutes + (h * 60 + m);
-      next = { ...p, isTomorrow: true };
+      next = Object.assign({}, p, { isTomorrow: true });
       nextDiffMin = tomorrowImsakMin;
     }
 
     // Kalan saat, dakika, saniye
     const totalRemainingSeconds = (nextDiffMin * 60) - currentSeconds;
-    const remHours = Math.floor(Math.max(0, totalRemainingSeconds) / 3600);
-    const remMinutes = Math.floor((Math.max(0, totalRemainingSeconds) % 3600) / 60);
-    const remSeconds = Math.max(0, totalRemainingSeconds) % 60;
+    const safeTotal = Math.max(0, totalRemainingSeconds);
+    const remHours = Math.floor(safeTotal / 3600);
+    const remMinutes = Math.floor((safeTotal % 3600) / 60);
+    const remSeconds = safeTotal % 60;
 
-    const pad = (n) => String(n).padStart(2, "0");
-    const diffFormatted = `${pad(remHours)}:${pad(remMinutes)}:${pad(remSeconds)}`;
+    // Tizen TV uyumlu güvenli 2 basamak formatı (padStart yerine)
+    const pad = (n) => (n < 10 ? "0" : "") + n;
+    const diffFormatted = pad(remHours) + ":" + pad(remMinutes) + ":" + pad(remSeconds);
 
     this.data.nextPrayerInfo = {
       label: next.label,
       time: next.time,
       isTomorrow: next.isTomorrow || false,
-      diffFormatted,
-      remHours,
-      remMinutes,
-      remSeconds
+      diffFormatted: diffFormatted,
+      remHours: remHours,
+      remMinutes: remMinutes,
+      remSeconds: remSeconds
     };
 
     return this.data.nextPrayerInfo;

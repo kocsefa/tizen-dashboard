@@ -1,5 +1,6 @@
 // ==========================================
 // Tizen TV Dashboard - Ana Başlatıcı (App)
+// Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
 // ==========================================
 
 const App = {
@@ -33,11 +34,16 @@ const App = {
   },
 
   async refreshAllData() {
-    await Promise.allSettled([
-      this.refreshWeather(),
-      this.refreshPrayer(),
-      this.refreshRates()
-    ]);
+    // Tizen TV uyumlu Promise.all (allSettled eski Tizen Chromium'da hata verir)
+    try {
+      await Promise.all([
+        this.refreshWeather().catch(err => console.warn("Hava durumu yenilenirken hata:", err)),
+        this.refreshPrayer().catch(err => console.warn("Namaz vakitleri yenilenirken hata:", err)),
+        this.refreshRates().catch(err => console.warn("Kurlar yenilenirken hata:", err))
+      ]);
+    } catch (e) {
+      console.warn("Veri güncelleme hatası:", e);
+    }
     Dashboard.render();
   },
 

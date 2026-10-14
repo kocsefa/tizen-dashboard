@@ -110,12 +110,36 @@ const Remote = {
 
       case this.TIZEN_KEYS.RETURN:
       case this.TIZEN_KEYS.BACK_BROWSER:
-        // Geri tuşu Tizen'de uygulamadan çıkmayı önlemek için varsayılan davranışı durdurabilir
-        if (typeof tizen !== "undefined") {
-          // İsteğe bağlı tizen.application.getCurrentApplication().exit();
+        e.preventDefault();
+        // TV'den çıkış kontrolü (2 saniye içinde çift basış)
+        if (this.lastBackPressTime && (Date.now() - this.lastBackPressTime < 2500)) {
+          if (typeof tizen !== "undefined" && tizen.application) {
+            tizen.application.getCurrentApplication().exit();
+          } else {
+            console.log("Tarayıcı ortamı: Uygulama çıkış simülasyonu");
+          }
+        } else {
+          this.lastBackPressTime = Date.now();
+          this.showExitToast();
         }
         break;
     }
+  },
+
+  showExitToast() {
+    let toast = document.getElementById("exit-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "exit-toast";
+      toast.style.cssText = "position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,0.92);color:#fff;padding:12px 24px;border-radius:30px;border:1px solid rgba(255,255,255,0.2);font-size:1.1rem;font-weight:600;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(10px);transition:opacity 0.3s ease;";
+      document.body.appendChild(toast);
+    }
+    toast.textContent = "Çıkmak için tekrar [Geri] tuşuna basın";
+    toast.style.opacity = "1";
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      toast.style.opacity = "0";
+    }, 2200);
   },
 
   // Kullanıcı inaktif kaldığında (örn. 45 sn) otomatik Tablo Moduna geçiş

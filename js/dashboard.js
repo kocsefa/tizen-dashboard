@@ -1,5 +1,6 @@
 // ==========================================
 // Tizen TV Dashboard - Dashboard UI Modülü
+// Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
 // ==========================================
 
 const Dashboard = {
@@ -46,14 +47,16 @@ const Dashboard = {
 
   // Canlı Saat & Tarih
   startClock() {
+    const pad = (n) => (n < 10 ? "0" : "") + n;
+
     const updateTime = () => {
       const now = new Date();
-      const h = String(now.getHours()).padStart(2, "0");
-      const m = String(now.getMinutes()).padStart(2, "0");
-      const s = String(now.getSeconds()).padStart(2, "0");
+      const h = pad(now.getHours());
+      const m = pad(now.getMinutes());
+      const s = pad(now.getSeconds());
 
       if (this.elements.clockTime) {
-        this.elements.clockTime.innerHTML = `${h}:${m}<span class="dash-clock-sec">:${s}</span>`;
+        this.elements.clockTime.innerHTML = h + ":" + m + '<span class="dash-clock-sec">:' + s + '</span>';
       }
 
       if (this.elements.clockDate) {
@@ -87,13 +90,13 @@ const Dashboard = {
     const w = State.data.weather;
     if (!w) return;
 
-    if (this.elements.weatherTemp) this.elements.weatherTemp.textContent = `${w.temp}°`;
+    if (this.elements.weatherTemp) this.elements.weatherTemp.textContent = w.temp + "°";
     if (this.elements.weatherDesc) this.elements.weatherDesc.textContent = w.desc;
     if (this.elements.weatherIcon) this.elements.weatherIcon.textContent = w.icon;
-    if (this.elements.weatherFeels) this.elements.weatherFeels.textContent = `${w.feelsLike}°`;
-    if (this.elements.weatherHumidity) this.elements.weatherHumidity.textContent = `%${w.humidity}`;
-    if (this.elements.weatherWind) this.elements.weatherWind.textContent = `${w.windSpeed} km/s`;
-    if (this.elements.weatherSun) this.elements.weatherSun.textContent = `${w.sunrise} / ${w.sunset}`;
+    if (this.elements.weatherFeels) this.elements.weatherFeels.textContent = w.feelsLike + "°";
+    if (this.elements.weatherHumidity) this.elements.weatherHumidity.textContent = "%" + w.humidity;
+    if (this.elements.weatherWind) this.elements.weatherWind.textContent = w.windSpeed + " km/s";
+    if (this.elements.weatherSun) this.elements.weatherSun.textContent = w.sunrise + " / " + w.sunset;
 
     // 3 Günlük Tahmin
     if (this.elements.weatherForecast && w.forecast) {
@@ -112,7 +115,7 @@ const Dashboard = {
     if (!p) return;
 
     if (this.elements.hijriDate && p.hijriDate) {
-      this.elements.hijriDate.textContent = `Hicri: ${p.hijriDate}`;
+      this.elements.hijriDate.textContent = "Hicri: " + p.hijriDate;
     }
 
     const nextInfo = State.calculateNextPrayer();
@@ -150,7 +153,7 @@ const Dashboard = {
     if (!nextInfo) return;
 
     if (this.elements.nextPrayerLabel) {
-      this.elements.nextPrayerLabel.textContent = `${nextInfo.label} Vaktine Kalan:`;
+      this.elements.nextPrayerLabel.textContent = nextInfo.label + " Vaktine Kalan:";
     }
 
     if (this.elements.nextPrayerCountdown) {
@@ -161,14 +164,14 @@ const Dashboard = {
   renderBottomWidgets() {
     // Günün Sözü
     if (State.data.quote) {
-      if (this.elements.quoteText) this.elements.quoteText.textContent = `"${State.data.quote.text}"`;
-      if (this.elements.quoteAuthor) this.elements.quoteAuthor.textContent = `— ${State.data.quote.author}`;
+      if (this.elements.quoteText) this.elements.quoteText.textContent = '"' + State.data.quote.text + '"';
+      if (this.elements.quoteAuthor) this.elements.quoteAuthor.textContent = "— " + State.data.quote.author;
     }
 
     // Döviz Kurları
     if (State.data.rates) {
-      if (this.elements.usdRate) this.elements.usdRate.textContent = `₺${State.data.rates.usd}`;
-      if (this.elements.eurRate) this.elements.eurRate.textContent = `₺${State.data.rates.eur}`;
+      if (this.elements.usdRate) this.elements.usdRate.textContent = "₺" + State.data.rates.usd;
+      if (this.elements.eurRate) this.elements.eurRate.textContent = "₺" + State.data.rates.eur;
     }
 
     // Tablo Önizleme

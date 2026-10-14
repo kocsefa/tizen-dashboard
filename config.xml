@@ -11,9 +11,10 @@
     <feature name="http://tizen.org/feature/screen.size.all"/>
     <icon src="icon.png"/>
     <name>Tizen Smart Dashboard</name>
-    <tizen:profile name="tv"/>
+    <tizen:profile name="tv-samsung"/>
     <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto"/>
     <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
     <tizen:privilege name="http://tizen.org/privilege/internet"/>
     <access origin="*" subdomains="true"/>
+    <tizen:content-security-policy>default-src 'self' https: http: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: http: *;</tizen:content-security-policy>
 </widget>
