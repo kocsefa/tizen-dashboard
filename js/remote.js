@@ -1,6 +1,7 @@
 // =========================================================================
 // Tizen TV Dashboard - Uzaktan Kumanda & İnaktivite (Idle) Yöneticisi
 // Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
+// Versiyon: 1.2.0 (Navigasyon & Kumanda Çakışma Düzeltmesi)
 // =========================================================================
 
 const Remote = {
@@ -8,6 +9,7 @@ const Remote = {
   isSettingsOpen: false,
   lastBackPressTime: 0,
   toastTimer: null,
+  artNavToastTimer: null,
 
   // Tizen Özel Tuş Kodları
   TIZEN_KEYS: {
@@ -23,20 +25,34 @@ const Remote = {
     YELLOW: 405,
     BLUE: 406,
     PLAY: 415,
-    PAUSE: 19
+    PAUSE: 19,
+    REWIND: 412,
+    FAST_FORWARD: 417
   },
 
   init() {
     this.registerTizenKeys();
     this.bindEvents();
     this.resetIdleTimer();
+    console.log("Remote yöneticisi başlatıldı (v1.2.0).");
   },
 
   // Tizen TV özel kumanda tuşlarını kaydet (Varsa)
   registerTizenKeys() {
     if (typeof tizen !== "undefined" && tizen.tvinputdevice) {
       try {
-        const keys = ["Return", "ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlayPause"];
+        const keys = [
+          "Return",
+          "ColorF0Red",
+          "ColorF1Green",
+          "ColorF2Yellow",
+          "ColorF3Blue",
+          "MediaPlayPause",
+          "MediaPlay",
+          "MediaPause",
+          "MediaRewind",
+          "MediaFastForward"
+        ];
         keys.forEach(k => {
           try {
             tizen.tvinputdevice.registerKey(k);
@@ -49,8 +65,8 @@ const Remote = {
   },
 
   bindEvents() {
-    // Klavye ve Kumanda Tuş Basımları
-    window.addEventListener("keydown", (e) => this.handleKeyDown(e));
+    // Klavye ve Kumanda Tuş Basımlarını 'capture: true' ile en başta yakala
+    window.addEventListener("keydown", (e) => this.handleKeyDown(e), true);
 
     // Fare / Dokunma Etkileşimleri (PC testleri ve dokunmatik ekranlar için)
     const resetOnUserActivity = () => {
@@ -64,41 +80,116 @@ const Remote = {
     window.addEventListener("touchstart", resetOnUserActivity);
   },
 
+  // Tuşun Sol / Geri olup olmadığını kapsamlı kontrol et
+  isLeftKey(e, keyCode) {
+    const k = (e.key || "").toLowerCase();
+    const c = (e.code || "").toLowerCase();
+    return (
+      keyCode === 37 ||
+      keyCode === this.TIZEN_KEYS.REWIND ||
+      k === "arrowleft" ||
+      k === "left" ||
+      c === "arrowleft" ||
+      k === "mediarewind" ||
+      k === "mediatrackprevious"
+    );
+  },
+
+  // Tuşun Sağ / İleri olup olmadığını kapsamlı kontrol et
+  isRightKey(e, keyCode) {
+    const k = (e.key || "").toLowerCase();
+    const c = (e.code || "").toLowerCase();
+    return (
+      keyCode === 39 ||
+      keyCode === this.TIZEN_KEYS.FAST_FORWARD ||
+      k === "arrowright" ||
+      k === "right" ||
+      c === "arrowright" ||
+      k === "mediafastforward" ||
+      k === "mediatracknext"
+    );
+  },
+
+  // Tuşun Onay / Dashboard'a Dönüş Tuşu olup olmadığını kontrol et
+  isExitToDashKey(e, keyCode) {
+    const k = (e.key || "").toLowerCase();
+    return (
+      keyCode === 13 || // Enter
+      keyCode === 32 || // Space
+      keyCode === this.TIZEN_KEYS.RETURN ||
+      keyCode === this.TIZEN_KEYS.BACK_BROWSER ||
+      keyCode === this.TIZEN_KEYS.RED ||
+      keyCode === this.TIZEN_KEYS.GREEN ||
+      keyCode === this.TIZEN_KEYS.YELLOW ||
+      keyCode === this.TIZEN_KEYS.BLUE ||
+      k === "enter" ||
+      k === "return" ||
+      k === "escape"
+    );
+  },
+
   handleKeyDown(e) {
-    const keyCode = e.keyCode || e.which;
-    console.log("Tuşa basıldı. KeyCode:", keyCode, "Mevcut Mod:", State.currentMode, "Ayarlar Açık:", this.isSettingsOpen);
+    const keyCode = e.keyCode || e.which || 0;
+    console.log("Remote Tuş Algılandı: KeyCode=" + keyCode + ", Key=" + e.key + ", Mod=" + State.currentMode);
 
     // =======================================================================
     // 1. DURUM: AYARLAR MODALI AÇIKSA
-    // Arkadaki ekrana HİÇBİR ŞEKİLDE komut gitmemeli!
+    // Kesinlikle arkadaki ekrana hiçbir tuş sızmamalı!
     // =======================================================================
     if (this.isSettingsOpen) {
       this.handleSettingsKeyDown(e, keyCode);
-      return; // Arkaya komut sızmasını kesin olarak engelle!
+      return;
     }
 
     // =======================================================================
     // 2. DURUM: RESİM TABLOSU MODUNDAYSAK (AMBIENT ART MODE)
-    // - SAĞ / SOL tuşları: Tablolar arasında geçiş yapmalı!
-    // - DİĞER HERHANGİ BİR TUŞ: Dashboard'a geri dönmeli!
     // =======================================================================
     if (State.currentMode === "ambient") {
-      if (keyCode === this.TIZEN_KEYS.LEFT) {
+      // SAĞ TUŞ: Sonraki Tabloya Geç
+      if (this.isRightKey(e, keyCode)) {
         e.preventDefault();
-        Ambient.prevArtwork();
-        return;
-      }
-
-      if (keyCode === this.TIZEN_KEYS.RIGHT) {
-        e.preventDefault();
+        e.stopPropagation();
         Ambient.nextArtwork();
+        this.showArtNavFeedback("Sonraki Tablo ▶");
         return;
       }
 
-      // Sağ ve Sol harici herhangi bir tuş basıldığında Dashboard moduna dön
-      e.preventDefault();
-      Ambient.exitAmbientMode();
-      this.resetIdleTimer();
+      // SOL TUŞ: Önceki Tabloya Geç
+      if (this.isLeftKey(e, keyCode)) {
+        e.preventDefault();
+        e.stopPropagation();
+        Ambient.prevArtwork();
+        this.showArtNavFeedback("◀ Önceki Tablo");
+        return;
+      }
+
+      // Yukarı / Aşağı Tuşları: Kazara çıkışı önle, tabloyu değiştir veya yoksay
+      if (keyCode === 38 || (e.key && e.key.toLowerCase() === "arrowup")) {
+        e.preventDefault();
+        e.stopPropagation();
+        Ambient.prevArtwork();
+        this.showArtNavFeedback("◀ Önceki Tablo");
+        return;
+      }
+      if (keyCode === 40 || (e.key && e.key.toLowerCase() === "arrowdown")) {
+        e.preventDefault();
+        e.stopPropagation();
+        Ambient.nextArtwork();
+        this.showArtNavFeedback("Sonraki Tablo ▶");
+        return;
+      }
+
+      // YALNIZCA BELİRLİ ÇIKIŞ TUŞLARI (OK, Enter, Return, Geri, Renkli Tuşlar)
+      // Dashboard moduna döndürür! Böylece TV'nin rastgele sinyalleri tabloyu kapatmaz!
+      if (this.isExitToDashKey(e, keyCode)) {
+        e.preventDefault();
+        e.stopPropagation();
+        Ambient.exitAmbientMode();
+        this.resetIdleTimer();
+        return;
+      }
+
+      // Diğer tanımlanamayan tuşları yoksay (Tablo görünümünde kalmaya devam et!)
       return;
     }
 
@@ -107,27 +198,30 @@ const Remote = {
     // =======================================================================
     this.resetIdleTimer();
 
+    // Sağ / Sol Tuşları: Dashboard'daki aktif tablo seçimini değiştir
+    if (this.isLeftKey(e, keyCode)) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (State.data.artworks && State.data.artworks.length > 0) {
+        State.data.currentArtworkIndex = (State.data.currentArtworkIndex - 1 + State.data.artworks.length) % State.data.artworks.length;
+        Dashboard.renderBottomWidgets();
+      }
+      return;
+    }
+
+    if (this.isRightKey(e, keyCode)) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (State.data.artworks && State.data.artworks.length > 0) {
+        State.data.currentArtworkIndex = (State.data.currentArtworkIndex + 1) % State.data.artworks.length;
+        Dashboard.renderBottomWidgets();
+      }
+      return;
+    }
+
     switch (keyCode) {
-      // Sağ / Sol Tuşları: Dashboard'daki aktif tablo seçimini değiştir
-      case this.TIZEN_KEYS.LEFT:
-        e.preventDefault();
-        if (State.data.artworks && State.data.artworks.length > 0) {
-          State.data.currentArtworkIndex = (State.data.currentArtworkIndex - 1 + State.data.artworks.length) % State.data.artworks.length;
-          Dashboard.renderBottomWidgets();
-        }
-        break;
-
-      case this.TIZEN_KEYS.RIGHT:
-        e.preventDefault();
-        if (State.data.artworks && State.data.artworks.length > 0) {
-          State.data.currentArtworkIndex = (State.data.currentArtworkIndex + 1) % State.data.artworks.length;
-          Dashboard.renderBottomWidgets();
-        }
-        break;
-
       case this.TIZEN_KEYS.ENTER:
       case 32: // Boşluk (Space)
-        // Enter'a basınca hemen Tablo Moduna geç
         e.preventDefault();
         Ambient.enterAmbientMode();
         break;
@@ -164,6 +258,26 @@ const Remote = {
         }
         break;
     }
+  },
+
+  // Tablo değişirken ekranda hafif zarif bir geçiş rozeti göster
+  showArtNavFeedback(text) {
+    let badge = document.getElementById("art-nav-feedback");
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.id = "art-nav-feedback";
+      badge.style.cssText = "position:fixed;top:40px;left:50%;transform:translateX(-50%);background:rgba(10,13,20,0.75);color:#38bdf8;padding:8px 20px;border-radius:24px;border:1px solid rgba(56,189,248,0.4);font-size:1.1rem;font-weight:700;z-index:9999;backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity 0.25s ease;pointer-events:none;";
+      document.body.appendChild(badge);
+    }
+    const idx = State.data.currentArtworkIndex + 1;
+    const total = (State.data.artworks || []).length;
+    badge.textContent = text + " (" + idx + "/" + total + ")";
+    badge.style.opacity = "1";
+
+    clearTimeout(this.artNavToastTimer);
+    this.artNavToastTimer = setTimeout(() => {
+      badge.style.opacity = "0";
+    }, 1400);
   },
 
   // Ayarlar modalı açıkken kumanda kontrolü
@@ -205,7 +319,6 @@ const Remote = {
 
     // Enter tuşuna basıldığında
     if (keyCode === this.TIZEN_KEYS.ENTER) {
-      // Eğer Save butonundaysa veya form içindeyse kaydet
       if (activeEl && activeEl.id === "setting-close-btn") {
         e.preventDefault();
         this.closeSettings();
@@ -255,11 +368,10 @@ const Remote = {
 
   openSettings() {
     this.isSettingsOpen = true;
-    clearTimeout(this.idleTimer); // Ayarlar açıkken idle sayacını durdur
+    clearTimeout(this.idleTimer);
     const modal = document.getElementById("settings-modal");
     if (modal) {
       modal.classList.remove("modal-hidden");
-      // İlk input'a odaklan
       const firstInput = document.getElementById("setting-city-select");
       if (firstInput) setTimeout(() => firstInput.focus(), 100);
     }
