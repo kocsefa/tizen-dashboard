@@ -10,10 +10,10 @@ const State = {
     cityName: "İstanbul",
     cityLat: 41.0082,
     cityLon: 28.9784,
-    idleTimeoutSec: 45, // Resim tablosuna geçiş inaktivite süresi (saniye)
+    idleTimeoutSec: 30, // Resim tablosuna geçiş inaktivite süresi (saniye)
     ambientPopupIntervalMin: 3, // Resim tablosundayken popup döngüsünün sıklığı (dakika, örn 3-5 dk)
     ambientPopupStepSec: 10, // Her bir bilgi kartının ekranda kalma süresi (10 saniye)
-    artworkIntervalSec: 60, // Tablonun değişme süresi (saniye)
+    artworkIntervalSec: 300, // Tablonun değişme süresi (saniye)
     popupCorner: "top-right", // Popup köşesi: 'top-right' veya 'bottom-right'
   },
 
