@@ -1,0 +1,12 @@
+{
+  "name": "tizen-ambient-dashboard",
+  "displayName": "Smart TV Günlük Dashboard & Resim Tablosu",
+  "version": "1.0.0",
+  "description": "Samsung TV için hava durumu, namaz saatleri ve 10sn aralıklı popup döngülü sanat tablosu (Art Mode) dashboard'u.",
+  "author": "Antigravity",
+  "main": "index.html",
+  "type": "webapp",
+  "category": "lifestyle",
+  "icon": "icon.png",
+  "permissions": ["internet", "tv.inputdevice"]
+}

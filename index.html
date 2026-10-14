@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart TV Günlük Dashboard & Resim Tablosu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. ANA DASHBOARD GÖRÜNÜMÜ (Tuşlama Yapıldığında veya İlk Açılışta)
+       ========================================================================= -->
+  <div id="dashboard-view" class="view-layer">
+    <!-- Üst Bar: Canlı Saat, Tarih, Hicri Tarih ve Şehir -->
+    <header class="dash-header">
+      <div class="dash-header-left">
+        <div id="dash-clock-time" class="dash-clock-time">12:00<span class="dash-clock-sec">:00</span></div>
+        <div class="dash-date-group">
+          <div id="dash-clock-date" class="dash-clock-date">Çarşamba, 14 Ekim 2026</div>
+          <div id="dash-hijri-date" class="dash-hijri-date">Hicri: 3 Rebîülevvel 1448</div>
+        </div>
+      </div>
+
+      <div class="dash-header-right">
+        <div class="dash-city-pill">
+          <span class="city-icon">📍</span>
+          <span id="dash-city-name">İstanbul</span>
+        </div>
+        <button id="btn-trigger-ambient" class="btn-header-action" title="Resim Tablosu Modu">🖼️ Tablo Modu (OK)</button>
+        <button id="btn-open-settings" class="btn-header-action" title="Ayarlar">⚙️ Ayarlar (S)</button>
+        <button id="btn-test-popup" class="btn-header-action" title="Popup Döngüsünü Hemen Test Et">⚡ Popup Testi (T)</button>
+      </div>
+    </header>
+
+    <!-- Ana Panel: Hava Durumu & Namaz Vakitleri -->
+    <main class="dash-main-grid">
+      <!-- Sol Panel: Hava Durumu -->
+      <section class="dash-card">
+        <div class="card-title">
+          <span>🌤️</span>
+          <span>Hava Durumu</span>
+        </div>
+
+        <div class="weather-main-row">
+          <div class="weather-temp-group">
+            <div id="dash-weather-temp" class="weather-temp">--°</div>
+            <div class="weather-desc-box">
+              <div id="dash-weather-desc" class="weather-desc">Yükleniyor...</div>
+              <div class="weather-feels">Hissedilen: <span id="dash-weather-feels">--°</span></div>
+            </div>
+          </div>
+          <div id="dash-weather-icon" class="weather-icon">☀️</div>
+        </div>
+
+        <!-- Metrikler -->
+        <div class="weather-metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Nem Oranı</span>
+            <span id="dash-weather-humidity" class="metric-val">%--</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Rüzgar Hızı</span>
+            <span id="dash-weather-wind" class="metric-val">-- km/s</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Gündoğumu / Batımı</span>
+            <span id="dash-weather-sun" class="metric-val">--:-- / --:--</span>
+          </div>
+        </div>
+
+        <!-- 3 Günlük Tahmin -->
+        <div id="dash-weather-forecast" class="weather-forecast-list">
+          <div class="forecast-item"><span class="forecast-day">Yarın</span><span class="forecast-icon">🌤️</span><span class="forecast-temp">--° / --°</span></div>
+          <div class="forecast-item"><span class="forecast-day">Sonraki</span><span class="forecast-icon">⛅</span><span class="forecast-temp">--° / --°</span></div>
+          <div class="forecast-item"><span class="forecast-day">Daha Sonra</span><span class="forecast-icon">🌧️</span><span class="forecast-temp">--° / --°</span></div>
+        </div>
+      </section>
+
+      <!-- Sağ Panel: Namaz Vakitleri & Geri Sayım -->
+      <section class="dash-card">
+        <div class="card-title">
+          <span>🕌</span>
+          <span>Namaz Vakitleri & Canlı Takip</span>
+        </div>
+
+        <!-- Sıradaki Vakte Geri Sayım Şeridi -->
+        <div class="prayer-countdown-banner">
+          <div id="dash-next-prayer-label" class="next-prayer-label">Sıradaki Vakte Kalan:</div>
+          <div id="dash-next-prayer-countdown" class="next-prayer-countdown">--:--:--</div>
+        </div>
+
+        <!-- Vakit Kartları Grid'i -->
+        <div id="dash-prayer-grid" class="prayer-grid">
+          <div class="prayer-card"><div class="prayer-name">İmsak</div><div class="prayer-time">--:--</div></div>
+          <div class="prayer-card"><div class="prayer-name">Güneş</div><div class="prayer-time">--:--</div></div>
+          <div class="prayer-card"><div class="prayer-name">Öğle</div><div class="prayer-time">--:--</div></div>
+          <div class="prayer-card"><div class="prayer-name">İkindi</div><div class="prayer-time">--:--</div></div>
+          <div class="prayer-card"><div class="prayer-name">Akşam</div><div class="prayer-time">--:--</div></div>
+          <div class="prayer-card"><div class="prayer-name">Yatsı</div><div class="prayer-time">--:--</div></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Alt Bar: Günün Hikmeti, Döviz Kurları ve Tablo Önizleme -->
+    <footer class="dash-bottom-bar">
+      <!-- Günün Sözü -->
+      <div class="bottom-widget-card">
+        <div id="dash-quote-text" class="quote-text">"Gününüz aydın ve huzurlu olsun."</div>
+        <div id="dash-quote-author" class="quote-author">— Günün İlhamı</div>
+      </div>
+
+      <!-- Canlı Kurlar -->
+      <div class="bottom-widget-card rates-box">
+        <div class="rate-item">
+          <span class="rate-title">Dolar (USD/TRY)</span>
+          <span id="dash-rate-usd" class="rate-val">₺--.--</span>
+        </div>
+        <div class="rate-item">
+          <span class="rate-title">Euro (EUR/TRY)</span>
+          <span id="dash-rate-eur" class="rate-val">₺--.--</span>
+        </div>
+      </div>
+
+      <!-- Aktif Sanat Eseri Önizleme -->
+      <div class="bottom-widget-card art-preview-box">
+        <img id="dash-art-preview-img" class="art-preview-thumb" src="" alt="Tablo Önizleme">
+        <div class="art-preview-meta">
+          <span class="rate-title">Aktif Sanat Tablosu</span>
+          <span id="dash-art-preview-title" class="art-preview-title">Yıldızlı Gece</span>
+          <span id="dash-art-preview-artist" class="art-preview-artist">Vincent van Gogh</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- TV Kumandası Kullanım İpuçları -->
+    <div class="dash-footer-hints">
+      <span class="hint-pill"><span class="key-badge">OK / Enter</span> Resim Tablosuna Geç</span>
+      <span class="hint-pill"><span class="key-badge">S / Kırmızı</span> Ayarlar</span>
+      <span class="hint-pill"><span class="key-badge">T / Yeşil</span> 10sn Popup Testi</span>
+      <span class="hint-pill"><span class="key-badge">Inaktif Kalındığında</span> Otomatik Resim Tablosu</span>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. RESİM TABLOSU MODU (AMBIENT ART MODE)
+       Herhangi bir işlem yapılmadığında tam ekran resim tablosu olur.
+       ========================================================================= -->
+  <div id="ambient-view" class="view-layer view-hidden">
+    <div class="ambient-art-container">
+      <img id="ambient-art-img" class="ambient-art-image" src="" alt="Sanat Tablosu">
+
+      <!-- Sol Alt Eser Bilgi Etiketi (Samsung The Frame Görünümü) -->
+      <div id="ambient-art-badge" class="ambient-art-badge">
+        <span id="ambient-art-title" class="art-title">Yıldızlı Gece</span>
+        <span id="ambient-art-artist" class="art-artist">Vincent van Gogh (1889)</span>
+      </div>
+
+      <!-- =====================================================================
+           SAĞ ÜST KÖŞE: PERİYODİK BİLGİ POPUP'I
+           3-5 dakikada bir açılır, 10'ar saniye arayla bilgileri döndürür.
+           ===================================================================== -->
+      <div id="ambient-popup-card" class="ambient-popup-wrapper popup-hidden">
+        <!-- Popup Başlık ve Adım Rozeti -->
+        <div class="popup-header">
+          <div id="ambient-popup-title" class="popup-title">🌤️ Hava Durumu</div>
+          <div id="ambient-popup-step-pill" class="popup-step-badge">1 / 3</div>
+        </div>
+
+        <!-- Popup Değişen Dinamik İçerik (10 saniye arayla döner) -->
+        <div id="ambient-popup-body" class="popup-body">
+          <!-- Dinamik içerik js/ambient.js tarafından doldurulur -->
+        </div>
+
+        <!-- 10 Saniyelik Canlı Progress Çizgisi -->
+        <div class="popup-progress-track">
+          <div id="ambient-popup-progress-fill" class="popup-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. AYARLAR MODALI
+       ========================================================================= -->
+  <div id="settings-modal" class="modal-overlay modal-hidden">
+    <div class="settings-card">
+      <h2 class="modal-title">⚙️ Dashboard Ayarları</h2>
+
+      <div class="setting-row">
+        <label for="setting-city-select" class="setting-label">Şehir (Hava Durumu & Namaz Vakitleri):</label>
+        <select id="setting-city-select" class="setting-input"></select>
+      </div>
+
+      <div class="setting-row">
+        <label for="setting-idle-select" class="setting-label">Resim Tablosuna Geçiş İnaktivite Süresi:</label>
+        <select id="setting-idle-select" class="setting-input">
+          <option value="15">15 Saniye (Hızlı Test)</option>
+          <option value="30">30 Saniye</option>
+          <option value="45" selected>45 Saniye (Önerilen)</option>
+          <option value="60">1 Dakika</option>
+          <option value="120">2 Dakika</option>
+          <option value="300">5 Dakika</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <label for="setting-popup-interval-select" class="setting-label">Tablo Modundayken Popup Bilgi Sıklığı:</label>
+        <select id="setting-popup-interval-select" class="setting-input">
+          <option value="1">1 Dakikada Bir (Hızlı)</option>
+          <option value="2">2 Dakikada Bir</option>
+          <option value="3" selected>3 Dakikada Bir (Önerilen)</option>
+          <option value="5">5 Dakikada Bir</option>
+          <option value="10">10 Dakikada Bir</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button id="setting-close-btn" class="btn-secondary">Kapat (Geri)</button>
+        <button id="setting-save-btn" class="btn-primary">Kaydet & Güncelle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scriptler -->
+  <script src="data/cities.js"></script>
+  <script src="data/artworks.js"></script>
+  <script src="data/quotes.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/ambient.js"></script>
+  <script src="js/remote.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "tizen-dashboard",
+  "version": "1.0.0",
+  "description": "Samsung Smart TV TizenBrew Günlük Dashboard & Resim Tablosu (Art Mode)",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 3000 -s .",
+    "dev": "python -m http.server 3000"
+  },
+  "keywords": ["tizen", "samsung-tv", "tizenbrew", "dashboard", "art-mode", "weather", "prayer-times"],
+  "author": "",
+  "license": "MIT"
+}

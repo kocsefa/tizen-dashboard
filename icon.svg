@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <!-- TV Çerçevesi -->
+  <rect x="76" y="96" width="360" height="250" rx="24" fill="none" stroke="#ffffff" stroke-width="16" opacity="0.9"/>
+  <!-- TV Standı -->
+  <path d="M220 346 L200 410 L312 410 L292 346 Z" fill="#ffffff" opacity="0.8"/>
+  <rect x="170" y="410" width="172" height="16" rx="8" fill="#ffffff" opacity="0.9"/>
+  <!-- İçerik İkonları: Güneş ve Hilal -->
+  <circle cx="160" cy="180" r="32" fill="#fbbf24"/>
+  <path d="M 330 160 A 36 36 0 1 0 330 220 A 28 28 0 1 1 330 160 Z" fill="url(#accent)"/>
+  <!-- Dalga / Dağ (Tablo Efekti) -->
+  <path d="M92 300 Q 180 230 260 270 T 428 250 L 428 330 L 92 330 Z" fill="#38bdf8" opacity="0.4"/>
+</svg>
