@@ -1,10 +1,13 @@
 // =========================================================================
 // Tizen TV Dashboard - Uzaktan Kumanda & İnaktivite (Idle) Yöneticisi
+// Samsung Tizen TV Uyumlu (Chrome 56+ Güvenli ES6)
 // =========================================================================
 
 const Remote = {
   idleTimer: null,
   isSettingsOpen: false,
+  lastBackPressTime: 0,
+  toastTimer: null,
 
   // Tizen Özel Tuş Kodları
   TIZEN_KEYS: {
@@ -51,7 +54,7 @@ const Remote = {
 
     // Fare / Dokunma Etkileşimleri (PC testleri ve dokunmatik ekranlar için)
     const resetOnUserActivity = () => {
-      if (State.currentMode === "dashboard") {
+      if (State.currentMode === "dashboard" && !this.isSettingsOpen) {
         this.resetIdleTimer();
       }
     };
@@ -63,31 +66,65 @@ const Remote = {
 
   handleKeyDown(e) {
     const keyCode = e.keyCode || e.which;
-    console.log("Tuşa basıldı. KeyCode:", keyCode, "Mevcut Mod:", State.currentMode);
+    console.log("Tuşa basıldı. KeyCode:", keyCode, "Mevcut Mod:", State.currentMode, "Ayarlar Açık:", this.isSettingsOpen);
 
-    // KURAL: Eğer Resim Tablosu Modundaysak (Ambient Art Mode),
-    // HERHANGİ BİR TUŞA basıldığı an Dashboard moduna dön!
+    // =======================================================================
+    // 1. DURUM: AYARLAR MODALI AÇIKSA
+    // Arkadaki ekrana HİÇBİR ŞEKİLDE komut gitmemeli!
+    // =======================================================================
+    if (this.isSettingsOpen) {
+      this.handleSettingsKeyDown(e, keyCode);
+      return; // Arkaya komut sızmasını kesin olarak engelle!
+    }
+
+    // =======================================================================
+    // 2. DURUM: RESİM TABLOSU MODUNDAYSAK (AMBIENT ART MODE)
+    // - SAĞ / SOL tuşları: Tablolar arasında geçiş yapmalı!
+    // - DİĞER HERHANGİ BİR TUŞ: Dashboard'a geri dönmeli!
+    // =======================================================================
     if (State.currentMode === "ambient") {
+      if (keyCode === this.TIZEN_KEYS.LEFT) {
+        e.preventDefault();
+        Ambient.prevArtwork();
+        return;
+      }
+
+      if (keyCode === this.TIZEN_KEYS.RIGHT) {
+        e.preventDefault();
+        Ambient.nextArtwork();
+        return;
+      }
+
+      // Sağ ve Sol harici herhangi bir tuş basıldığında Dashboard moduna dön
       e.preventDefault();
       Ambient.exitAmbientMode();
       this.resetIdleTimer();
       return;
     }
 
-    // Eğer Dashboard modundaysak, kumanda komutlarını işle ve idle timer'ı tazele
+    // =======================================================================
+    // 3. DURUM: DASHBOARD MODUNDAYSAK
+    // =======================================================================
     this.resetIdleTimer();
 
-    // Ayarlar modalı açıksa
-    if (this.isSettingsOpen) {
-      if (keyCode === this.TIZEN_KEYS.RETURN || keyCode === this.TIZEN_KEYS.BACK_BROWSER) {
-        e.preventDefault();
-        this.closeSettings();
-        return;
-      }
-    }
-
-    // Dashboard Modu Tuş İşlevleri
     switch (keyCode) {
+      // Sağ / Sol Tuşları: Dashboard'daki aktif tablo seçimini değiştir
+      case this.TIZEN_KEYS.LEFT:
+        e.preventDefault();
+        if (State.data.artworks && State.data.artworks.length > 0) {
+          State.data.currentArtworkIndex = (State.data.currentArtworkIndex - 1 + State.data.artworks.length) % State.data.artworks.length;
+          Dashboard.renderBottomWidgets();
+        }
+        break;
+
+      case this.TIZEN_KEYS.RIGHT:
+        e.preventDefault();
+        if (State.data.artworks && State.data.artworks.length > 0) {
+          State.data.currentArtworkIndex = (State.data.currentArtworkIndex + 1) % State.data.artworks.length;
+          Dashboard.renderBottomWidgets();
+        }
+        break;
+
       case this.TIZEN_KEYS.ENTER:
       case 32: // Boşluk (Space)
         // Enter'a basınca hemen Tablo Moduna geç
@@ -97,11 +134,13 @@ const Remote = {
 
       case this.TIZEN_KEYS.RED:
       case 83: // 'S' Tuşu - Ayarları Aç
-        this.toggleSettings();
+        e.preventDefault();
+        this.openSettings();
         break;
 
       case this.TIZEN_KEYS.GREEN:
       case 84: // 'T' Tuşu - Test: Hemen Tabloya Geç ve Popup Göster
+        e.preventDefault();
         Ambient.enterAmbientMode();
         setTimeout(() => {
           Ambient.startPopupSequence();
@@ -111,18 +150,71 @@ const Remote = {
       case this.TIZEN_KEYS.RETURN:
       case this.TIZEN_KEYS.BACK_BROWSER:
         e.preventDefault();
-        // TV'den çıkış kontrolü (2 saniye içinde çift basış)
-        if (this.lastBackPressTime && (Date.now() - this.lastBackPressTime < 2500)) {
+        // TV'den çıkış kontrolü (2.5 saniye içinde çift basış)
+        const now = Date.now();
+        if (this.lastBackPressTime && (now - this.lastBackPressTime < 2500)) {
           if (typeof tizen !== "undefined" && tizen.application) {
             tizen.application.getCurrentApplication().exit();
           } else {
             console.log("Tarayıcı ortamı: Uygulama çıkış simülasyonu");
           }
         } else {
-          this.lastBackPressTime = Date.now();
+          this.lastBackPressTime = now;
           this.showExitToast();
         }
         break;
+    }
+  },
+
+  // Ayarlar modalı açıkken kumanda kontrolü
+  handleSettingsKeyDown(e, keyCode) {
+    e.stopPropagation();
+
+    // Geri Tuşu: Ayarları Kapat
+    if (keyCode === this.TIZEN_KEYS.RETURN || keyCode === this.TIZEN_KEYS.BACK_BROWSER) {
+      e.preventDefault();
+      this.closeSettings();
+      return;
+    }
+
+    // Modal içindeki odaklanabilir elemanlar
+    const focusable = [
+      document.getElementById("setting-city-select"),
+      document.getElementById("setting-idle-select"),
+      document.getElementById("setting-popup-interval-select"),
+      document.getElementById("setting-save-btn"),
+      document.getElementById("setting-close-btn")
+    ].filter(el => el !== null);
+
+    const activeEl = document.activeElement;
+    let currentIndex = focusable.indexOf(activeEl);
+
+    if (keyCode === this.TIZEN_KEYS.DOWN) {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % focusable.length;
+      focusable[nextIndex].focus();
+      return;
+    }
+
+    if (keyCode === this.TIZEN_KEYS.UP) {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + focusable.length) % focusable.length;
+      focusable[prevIndex].focus();
+      return;
+    }
+
+    // Enter tuşuna basıldığında
+    if (keyCode === this.TIZEN_KEYS.ENTER) {
+      // Eğer Save butonundaysa veya form içindeyse kaydet
+      if (activeEl && activeEl.id === "setting-close-btn") {
+        e.preventDefault();
+        this.closeSettings();
+      } else {
+        e.preventDefault();
+        const saveBtn = document.getElementById("setting-save-btn");
+        if (saveBtn) saveBtn.click();
+      }
+      return;
     }
   },
 
@@ -145,9 +237,9 @@ const Remote = {
   // Kullanıcı inaktif kaldığında (örn. 45 sn) otomatik Tablo Moduna geçiş
   resetIdleTimer() {
     clearTimeout(this.idleTimer);
-    if (State.currentMode === "dashboard") {
+    if (State.currentMode === "dashboard" && !this.isSettingsOpen) {
       this.idleTimer = setTimeout(() => {
-        console.log(`İnaktivite süresi doldu (${State.config.idleTimeoutSec} sn). Resim Tablosuna geçiliyor...`);
+        console.log("İnaktivite süresi doldu. Resim Tablosuna geçiliyor...");
         Ambient.enterAmbientMode();
       }, State.config.idleTimeoutSec * 1000);
     }
@@ -163,14 +255,21 @@ const Remote = {
 
   openSettings() {
     this.isSettingsOpen = true;
+    clearTimeout(this.idleTimer); // Ayarlar açıkken idle sayacını durdur
     const modal = document.getElementById("settings-modal");
-    if (modal) modal.classList.remove("modal-hidden");
+    if (modal) {
+      modal.classList.remove("modal-hidden");
+      // İlk input'a odaklan
+      const firstInput = document.getElementById("setting-city-select");
+      if (firstInput) setTimeout(() => firstInput.focus(), 100);
+    }
   },
 
   closeSettings() {
     this.isSettingsOpen = false;
     const modal = document.getElementById("settings-modal");
     if (modal) modal.classList.add("modal-hidden");
+    this.resetIdleTimer();
   }
 };
 

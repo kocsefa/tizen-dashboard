@@ -180,10 +180,12 @@
         });
         clearTimeout(timeoutId);
 
-        // Bağlantı başarılı, uygulamayı yükle!
+        // Bağlantı başarılı, uygulamayı en güncel haliyle yükle!
         updateStatus("Uygulama açılıyor...");
         setTimeout(() => {
-          window.location.replace(HOSTED_URL);
+          // Cache busting: Tizen TV'nin eski önbelleği kullanmasını önler, her zaman en son GitHub kodunu çeker
+          const freshUrl = HOSTED_URL + (HOSTED_URL.indexOf("?") === -1 ? "?" : "&") + "_v=" + Date.now();
+          window.location.replace(freshUrl);
         }, 150);
       } catch (err) {
         console.warn("Bağlantı denemesi " + attemptCount + " başarısız:", err);

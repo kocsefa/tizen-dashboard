@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Smart TV Günlük Dashboard & Resim Tablosu</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=1.1.0">
 </head>
 <body>
 
@@ -135,10 +138,11 @@
 
     <!-- TV Kumandası Kullanım İpuçları -->
     <div class="dash-footer-hints">
+      <span class="hint-pill"><span class="key-badge">◀ ▶</span> Tablo Değiştir</span>
       <span class="hint-pill"><span class="key-badge">OK / Enter</span> Resim Tablosuna Geç</span>
       <span class="hint-pill"><span class="key-badge">S / Kırmızı</span> Ayarlar</span>
       <span class="hint-pill"><span class="key-badge">T / Yeşil</span> 10sn Popup Testi</span>
-      <span class="hint-pill"><span class="key-badge">Inaktif Kalındığında</span> Otomatik Resim Tablosu</span>
+      <span class="hint-pill"><span class="key-badge">İnaktif Kalındığında</span> Otomatik Resim Tablosu</span>
     </div>
   </div>
 
@@ -222,15 +226,15 @@
     </div>
   </div>
 
-  <!-- Scriptler -->
-  <script src="data/cities.js"></script>
-  <script src="data/artworks.js"></script>
-  <script src="data/quotes.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/ambient.js"></script>
-  <script src="js/remote.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Scriptler (Cache busting parametreli) -->
+  <script src="data/cities.js?v=1.1.0"></script>
+  <script src="data/artworks.js?v=1.1.0"></script>
+  <script src="data/quotes.js?v=1.1.0"></script>
+  <script src="js/api.js?v=1.1.0"></script>
+  <script src="js/state.js?v=1.1.0"></script>
+  <script src="js/dashboard.js?v=1.1.0"></script>
+  <script src="js/ambient.js?v=1.1.0"></script>
+  <script src="js/remote.js?v=1.1.0"></script>
+  <script src="js/app.js?v=1.1.0"></script>
 </body>
 </html>

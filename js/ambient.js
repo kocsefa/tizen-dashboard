@@ -129,6 +129,13 @@ const Ambient = {
     this.showCurrentArtwork();
   },
 
+  prevArtwork() {
+    const total = State.data.artworks.length;
+    if (total === 0) return;
+    State.data.currentArtworkIndex = (State.data.currentArtworkIndex - 1 + total) % total;
+    this.showCurrentArtwork();
+  },
+
   // =========================================================================
   // Periyodik Bilgi Popupları (Her 3-5 dk'da bir, 10sn aralıklarla dönen)
   // =========================================================================
@@ -250,11 +257,30 @@ const Ambient = {
           <div class="popup-prayer-next-time">Vakit Saati: ${next.time}</div>
         </div>
         <div class="popup-prayer-strip">
-          <div class="p-strip-item ${next.label === 'İmsak' ? 'active' : ''}">İmsak: ${p.Imsak}</div>
-          <div class="p-strip-item ${next.label === 'Öğle' ? 'active' : ''}">Öğle: ${p.Ogle}</div>
-          <div class="p-strip-item ${next.label === 'İkindi' ? 'active' : ''}">İkindi: ${p.Ikindi}</div>
-          <div class="p-strip-item ${next.label === 'Akşam' ? 'active' : ''}">Akşam: ${p.Aksam}</div>
-          <div class="p-strip-item ${next.label === 'Yatsı' ? 'active' : ''}">Yatsı: ${p.Yatsi}</div>
+          <div class="p-strip-item ${next.label === 'İmsak' ? 'active' : ''}">
+            <span class="p-strip-name">İmsak</span>
+            <span class="p-strip-time">${p.Imsak}</span>
+          </div>
+          <div class="p-strip-item ${next.label === 'Güneş' ? 'active' : ''}">
+            <span class="p-strip-name">Güneş</span>
+            <span class="p-strip-time">${p.Gunes}</span>
+          </div>
+          <div class="p-strip-item ${next.label === 'Öğle' ? 'active' : ''}">
+            <span class="p-strip-name">Öğle</span>
+            <span class="p-strip-time">${p.Ogle}</span>
+          </div>
+          <div class="p-strip-item ${next.label === 'İkindi' ? 'active' : ''}">
+            <span class="p-strip-name">İkindi</span>
+            <span class="p-strip-time">${p.Ikindi}</span>
+          </div>
+          <div class="p-strip-item ${next.label === 'Akşam' ? 'active' : ''}">
+            <span class="p-strip-name">Akşam</span>
+            <span class="p-strip-time">${p.Aksam}</span>
+          </div>
+          <div class="p-strip-item ${next.label === 'Yatsı' ? 'active' : ''}">
+            <span class="p-strip-name">Yatsı</span>
+            <span class="p-strip-time">${p.Yatsi}</span>
+          </div>
         </div>
       </div>
     `;
